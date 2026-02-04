@@ -1,102 +1,93 @@
-// INITIALISATION DU STOCKAGE
-let services = JSON.parse(localStorage.getItem('rp_services')) || [
-    { emoji: '🦋', title: 'Pronote', link: 'https://index.pronote.net' },
-    { emoji: '✉️', title: 'Webmail', link: 'https://mail.google.com' }
-];
+const ADMIN_MAIL = "ce.0227235a@campus-rosaparks.fr";
+const PRONOTE_BASE = "https://pronote.campus-rosaparks.fr/";
 
-let logs = JSON.parse(localStorage.getItem('rp_logs')) || [];
+// Initialisation des données
+let db = {
+    services: JSON.parse(localStorage.getItem('rp_srv')) || [
+        { emoji: '🦋', title: 'PRONOTE', link: PRONOTE_BASE },
+        { emoji: '✉️', title: 'GMAIL', link: 'https://mail.google.com' }
+    ],
+    logs: JSON.parse(localStorage.getItem('rp_logs')) || [],
+    cas_links: JSON.parse(localStorage.getItem('rp_cas')) || {} // { email: cas_id }
+};
 
-const ADMIN_EMAIL = "ce.0227235a@campus-rosaparks.fr";
+// Logique UI
+const ui = {
+    addLog: (msg) => {
+        const time = new Date().toLocaleTimeString();
+        db.logs.unshift(`[${time}] ${msg}`);
+        localStorage.setItem('rp_logs', JSON.stringify(db.logs));
+        ui.renderLogs();
+    },
 
-// GESTION DE LA CONNEXION GOOGLE
-function handleCredentialResponse(response) {
-    const data = parseJwt(response.credential);
-    const email = data.email;
+    renderLogs: () => {
+        const display = document.getElementById('log-display');
+        if(display) display.innerHTML = db.logs.map(l => `<div>${l}</div>`).join('');
+    },
 
-    // Restriction Domaine
-    if (!email.endsWith("@campus-rosaparks.fr")) {
-        alert("Accès Refusé : Domaine @campus-rosaparks.fr requis.");
+    renderServices: (userEmail) => {
+        const grid = document.getElementById('services-grid');
+        grid.innerHTML = db.services.map(s => {
+            let finalLink = s.link;
+            // Si c'est Pronote et qu'un CAS est lié à cet utilisateur
+            if(s.title === "PRONOTE" && db.cas_links[userEmail]) {
+                finalLink += `?cas_ticket=${db.cas_links[userEmail]}`;
+            }
+            return `
+                <a href="${finalLink}" target="_blank" class="card">
+                    <div style="font-size: 40px;">${s.emoji}</div>
+                    <h3>${s.title}</h3>
+                </a>
+            `;
+        }).join('');
+    },
+
+    addService: () => {
+        const emoji = document.getElementById('new-emoji').value;
+        const title = document.getElementById('new-title').value.toUpperCase();
+        const link = document.getElementById('new-link').value;
+        if(emoji && title && link) {
+            db.services.push({emoji, title, link});
+            localStorage.setItem('rp_srv', JSON.stringify(db.services));
+            ui.renderServices(ADMIN_MAIL);
+            ui.addLog(`NOUVEAU SERVICE : ${title}`);
+        }
+    },
+
+    linkCAS: () => {
+        const casId = document.getElementById('cas-id').value;
+        const targetMail = document.getElementById('user-selector').value;
+        if(casId && targetMail) {
+            db.cas_links[targetMail] = casId;
+            localStorage.setItem('rp_cas', JSON.stringify(db.cas_links));
+            ui.addLog(`CAS ${casId} LIE A ${targetMail}`);
+            alert(`CAS ACTIVÉ POUR ${targetMail}`);
+        }
+    }
+};
+
+// Gestion de la connexion
+function onConnect(response) {
+    const user = JSON.parse(atob(response.credential.split('.')[1]));
+    
+    if(!user.email.endsWith("@campus-rosaparks.fr")) {
+        alert("ACCESS DENIED : CAMPUS ACCOUNT REQUIRED");
         return;
     }
 
-    // Enregistrement du Log
-    saveLog(email);
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('user-display').innerText = `SESSION: ${user.email}`;
+    
+    ui.addLog(`CONNECTION SUCCESS: ${user.email}`);
 
-    // Affichage Dashboard
-    showDashboard(data);
-}
-
-function parseJwt(token) {
-    return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-}
-
-function saveLog(email) {
-    const newLog = {
-        user: email,
-        time: new Date().toLocaleString(),
-        status: "Connecté"
-    };
-    logs.unshift(newLog); // Ajoute au début
-    localStorage.setItem('rp_logs', JSON.stringify(logs));
-}
-
-function showDashboard(user) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('welcome-msg').innerText = "Bienvenue, " + user.given_name;
-    document.getElementById('user-email').innerText = user.email;
-
-    // Mode ADMIN
-    if (user.email === ADMIN_EMAIL) {
-        document.getElementById('admin-panel').style.display = 'block';
-        document.getElementById('admin-tag').innerHTML = '<span class="admin-badge">Admin Root</span>';
-        renderLogs();
+    if(user.email === ADMIN_MAIL) {
+        document.getElementById('admin-zone').style.display = 'block';
+        // Remplir le selecteur d'utilisateurs avec les mails des logs
+        const users = [...new Set(db.logs.map(l => l.split('SUCCESS: ')[1]).filter(u => u))];
+        const selector = document.getElementById('user-selector');
+        selector.innerHTML = users.map(u => `<option value="${u}">${u}</option>`).join('');
     }
 
-    renderServices(user.email);
-}
-
-// GESTION DES SERVICES
-function renderServices(userEmail) {
-    const grid = document.getElementById('servicesGrid');
-    grid.innerHTML = '';
-
-    services.forEach(srv => {
-        const a = document.createElement('a');
-        a.className = 'service-item';
-        
-        // LOGIQUE CAS POUR PRONOTE
-        if (srv.title.toLowerCase() === 'pronote') {
-            // On simule la création d'un ticket CAS basé sur le mail
-            const casTicket = btoa(userEmail + "_ST_AUTH");
-            a.href = srv.link + "?cas_ticket=" + casTicket;
-        } else {
-            a.href = srv.link;
-        }
-        
-        a.target = "_blank";
-        a.innerHTML = `<span class="emoji">${srv.emoji}</span><span>${srv.title}</span>`;
-        grid.appendChild(a);
-    });
-}
-
-function addService() {
-    const emoji = document.getElementById('srvEmoji').value;
-    const title = document.getElementById('srvTitle').value;
-    const link = document.getElementById('srvLink').value;
-
-    if (emoji && title && link) {
-        services.push({ emoji, title, link });
-        localStorage.setItem('rp_services', JSON.stringify(services));
-        renderServices(ADMIN_EMAIL);
-        alert("Service ajouté avec succès !");
-    }
-}
-
-function renderLogs() {
-    const body = document.getElementById('logBody');
-    body.innerHTML = '';
-    logs.slice(0, 10).forEach(log => {
-        body.innerHTML += `<tr><td>${log.user}</td><td>${log.time}</td><td>${log.status}</td></tr>`;
-    });
+    ui.renderServices(user.email);
+    ui.renderLogs();
 }
