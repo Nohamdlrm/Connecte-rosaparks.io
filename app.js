@@ -1,111 +1,100 @@
-// CONFIGURATION INITIALE
-const ADMIN_ID = "ce.0227235a@campus-rosaparks.fr";
+const ADMIN_EMAIL = "ce.0227235a@campus-rosaparks.fr";
 const PRONOTE_URL = "https://pronote.campus-rosaparks.fr/";
 
-let services = JSON.parse(localStorage.getItem('rp_srv')) || [
-    { name: 'PRONOTE', emoji: '💎', link: PRONOTE_URL },
-    { name: 'GMAIL', emoji: '📧', link: 'https://mail.google.com' }
-];
+let state = {
+    services: JSON.parse(localStorage.getItem('rp_srv')) || [
+        { emoji: '🦋', title: 'Pronote', link: PRONOTE_URL },
+        { emoji: '✉️', title: 'Gmail', link: 'https://mail.google.com' }
+    ],
+    logs: JSON.parse(localStorage.getItem('rp_log')) || [],
+    cas_vault: JSON.parse(localStorage.getItem('rp_cas')) || {} // Stocke { mail: ticket }
+};
 
-let logs = JSON.parse(localStorage.getItem('rp_logs')) || [];
-let casStore = JSON.parse(localStorage.getItem('rp_cas')) || {}; // Stocke les CAS par mail
-
-// AUTHENTIFICATION
 function onAuth(response) {
     const user = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
     
     if (!user.email.endsWith("@campus-rosaparks.fr")) {
-        alert("DOMAINE REFUSÉ");
+        document.getElementById('error-box').style.display = 'block';
         return;
     }
 
-    // Sauvegarde du log
-    logs.unshift({ user: user.email, date: new Date().toLocaleTimeString() });
-    localStorage.setItem('rp_logs', JSON.stringify(logs));
-
-    showApp(user);
+    logAction(user.email, "AUTH_SUCCESS");
+    initApp(user);
 }
 
-function showApp(user) {
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('mainView').style.display = 'block';
-    document.getElementById('welcomeTitle').innerText = user.given_name.toUpperCase();
+function initApp(user) {
+    document.getElementById('view-login').classList.remove('active');
+    document.getElementById('view-dash').classList.add('active');
+    document.getElementById('user-pill').innerText = user.email.toUpperCase();
 
-    if (user.email === ADMIN_ID) {
-        document.getElementById('adminArea').style.display = 'block';
-        document.getElementById('badgeAdmin').innerHTML = '<span style="color:var(--admin-red); border:1px solid; padding:5px 15px; border-radius:50px; font-size:0.8rem;">ADMIN ROOT</span>';
+    if (user.email === ADMIN_EMAIL) {
+        document.getElementById('admin-zone').style.display = 'block';
         renderLogs();
     }
-
     renderServices(user.email);
 }
 
-// GESTION CAS PRONOTE
-function generateCAS() {
-    const targetMail = document.getElementById('casUserMail').value;
-    if (!targetMail) return;
-
-    // Création d'un ticket unique pour ce mail
-    const ticket = "CAS-PR-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-    
-    // On enregistre le CAS pour ce mail
-    casStore[targetMail] = ticket;
-    localStorage.setItem('rp_cas', JSON.stringify(casStore));
-
-    // Copie dans le presse-papier pour l'admin
-    navigator.clipboard.writeText(ticket);
-    
-    document.getElementById('casStatus').style.display = 'block';
-    setTimeout(() => { document.getElementById('casStatus').style.display = 'none'; }, 3000);
-}
-
-// AFFICHAGE SERVICES
 function renderServices(userEmail) {
-    const container = document.getElementById('gridServices');
-    container.innerHTML = '';
+    const grid = document.getElementById('srv-grid');
+    grid.innerHTML = '';
 
-    services.forEach(s => {
+    state.services.forEach(s => {
         const card = document.createElement('a');
-        card.className = 'service-link';
+        card.className = 'card';
         
-        // Logique de connexion automatique
-        if (s.name === 'PRONOTE') {
-            const myCAS = casStore[userEmail];
-            if (myCAS) {
-                // Si un CAS existe pour cet élève, on l'injecte dans l'URL
-                card.href = s.link + "?ticket=" + myCAS + "&user=" + btoa(userEmail);
-            } else {
-                card.href = s.link;
-            }
+        // LOGIQUE CAS PRONOTE
+        if (s.title.toLowerCase() === 'pronote') {
+            const userTicket = state.cas_vault[userEmail];
+            card.href = userTicket ? `${s.link}?ticket=${userTicket}&user=${userEmail}` : s.link;
         } else {
             card.href = s.link;
         }
 
         card.target = "_blank";
-        card.innerHTML = `<span style="font-size:2.5rem">${s.emoji}</span><b>${s.name}</b>`;
-        container.appendChild(card);
+        card.innerHTML = `<span class="emoji">${s.emoji}</span><span style="font-weight:500">${s.title}</span>`;
+        grid.appendChild(card);
     });
 }
 
-// ADMIN FUNCTIONS
-function addNewService() {
-    const name = document.getElementById('newSrvName').value.toUpperCase();
-    const emoji = document.getElementById('newSrvEmoji').value;
-    const link = document.getElementById('newSrvLink').value;
+// LOGIQUE ADMIN : GÉNÉRER CAS
+function generateCAS() {
+    const targetMail = document.getElementById('cas-mail').value;
+    if (!targetMail.endsWith("@campus-rosaparks.fr")) {
+        alert("Mail invalide");
+        return;
+    }
 
-    if (name && link) {
-        services.push({ name, emoji, link });
-        localStorage.setItem('rp_srv', JSON.stringify(services));
-        renderServices(ADMIN_ID);
+    // Création d'un ticket CAS "Vrai" (Simulé par un hash unique)
+    const ticket = "ST-" + Math.random().toString(36).substring(2, 15).toUpperCase();
+    state.cas_vault[targetMail] = ticket;
+    
+    localStorage.setItem('rp_cas', JSON.stringify(state.cas_vault));
+    document.getElementById('cas-result').innerText = `TICKET GÉNÉRÉ : ${ticket} pour ${targetMail}`;
+    logAction(ADMIN_EMAIL, `GEN_CAS_FOR_${targetMail}`);
+    renderServices(ADMIN_EMAIL);
+}
+
+function addNewService() {
+    const s = {
+        emoji: document.getElementById('new-emoji').value,
+        title: document.getElementById('new-title').value,
+        link: document.getElementById('new-link').value
+    };
+    if (s.title && s.link) {
+        state.services.push(s);
+        localStorage.setItem('rp_srv', JSON.stringify(state.services));
+        renderServices(ADMIN_EMAIL);
     }
 }
 
+function logAction(user, action) {
+    state.logs.unshift({ user, action, time: new Date().toLocaleTimeString() });
+    localStorage.setItem('rp_log', JSON.stringify(state.logs));
+}
+
 function renderLogs() {
-    const display = document.getElementById('logDisplay');
-    display.innerHTML = logs.slice(0, 8).map(l => `
-        <tr>
-            <td><span class="user">${l.user}</span> a accédé au Nexus</td>
-            <td style="text-align:right">${l.date}</td>
-        </tr>
-    `).join('');
+    const list = document.getElementById('log-list');
+    list.innerHTML = state.logs.slice(0, 10).map(l => 
+        `<tr><td>${l.user}</td><td>${l.time}</td><td>${l.action}</td></tr>`
+    ).join('');
 }
