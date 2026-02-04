@@ -2,138 +2,181 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>ROSA PARKS | NEURAL CONNECT</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>Rosa Parks | Nexus Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
-            --neon: #00ff41; /* Vert Matrix/Cyber */
             --bg: #050505;
-            --card-bg: rgba(10, 10, 10, 0.95);
-            --border: rgba(0, 255, 65, 0.2);
+            --accent: #00ff88; /* Vert Néon Cyber */
+            --admin-red: #ff0044;
+            --glass: rgba(255, 255, 255, 0.02);
+            --card-bg: rgba(10, 10, 12, 0.95);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
-        
+
         body {
             background: var(--bg);
-            color: #fff;
+            color: #e0e0e0;
             overflow-x: hidden;
-            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% -20%, #1a3328 0%, transparent 50%);
         }
 
-        /* Scanline effect */
-        body::before {
-            content: " ";
-            position: fixed; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        /* Container Principal */
+        .wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
-            max-width: 1200px; margin: 0 auto; padding: 40px 20px;
-            position: relative; z-index: 1;
-        }
-
-        header { text-align: center; margin-bottom: 60px; }
-        h1 { 
-            font-family: 'Syncopate', sans-serif; font-size: 3.5rem; letter-spacing: 15px;
-            text-transform: uppercase; color: var(--neon); text-shadow: 0 0 20px var(--neon);
-        }
-
-        /* Glassmorphism Cyber */
-        .glass-panel {
             background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: 0px; /* Style brutaliste */
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 60px;
+            box-shadow: 0 0 100px rgba(0,0,0,0.9);
+            position: relative;
+        }
+
+        /* Titre Néon */
+        h1 { font-size: 3.5rem; font-weight: 700; letter-spacing: -2px; margin-bottom: 5px; color: #fff; }
+        .neon-line { height: 4px; width: 80px; background: var(--accent); margin-bottom: 40px; border-radius: 2px; box-shadow: 0 0 15px var(--accent); }
+
+        /* Dashboard Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+
+        .service-link {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 35px;
+            border-radius: 15px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            transition: 0.3s all ease;
+            position: relative;
+        }
+
+        .service-link:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .service-link b { font-size: 1.2rem; display: block; margin-top: 10px; }
+
+        /* Admin Console */
+        #adminArea {
+            display: none;
+            margin-top: 80px;
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 15px;
             padding: 40px;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+            border: 1px dashed var(--border);
         }
 
-        /* Grid Services */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .admin-header { display: flex; align-items: center; gap: 15px; color: var(--admin-red); margin-bottom: 30px; }
         
-        .card {
-            border: 1px solid var(--border); padding: 30px;
-            transition: all 0.3s; cursor: pointer; text-decoration: none; color: #fff;
-            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+        .cas-config-box {
+            background: #000;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 20px;
         }
 
-        .card:hover {
-            background: var(--neon); color: #000; box-shadow: 0 0 40px var(--neon);
-            transform: scale(1.02);
-        }
-
-        .card h3 { font-family: 'Syncopate', sans-serif; font-size: 0.8rem; margin-top: 15px; }
-
-        /* Admin Section */
-        #admin-zone { display: none; margin-top: 80px; border-top: 2px solid var(--neon); padding-top: 40px; }
-        .admin-header { font-family: 'Syncopate'; color: var(--neon); margin-bottom: 30px; }
-
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        
         input, select {
-            background: #000; border: 1px solid var(--neon); padding: 15px;
-            color: var(--neon); width: 100%; margin-bottom: 10px;
+            background: #111;
+            border: 1px solid var(--border);
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: #fff;
+            flex-grow: 1;
+            outline: none;
         }
 
-        .btn {
-            background: var(--neon); color: #000; padding: 15px 30px; 
-            border: none; font-weight: bold; cursor: pointer; text-transform: uppercase;
+        button {
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
         }
 
-        #log-display {
-            background: #000; padding: 20px; border: 1px solid #333;
-            font-family: 'Courier New', monospace; font-size: 0.8rem; height: 200px; overflow-y: auto;
-        }
+        .btn-accent { background: var(--accent); color: #000; }
+        .btn-accent:hover { filter: brightness(1.2); transform: scale(1.02); }
 
-        #login-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
+        /* Logs */
+        .log-list { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        .log-list td { padding: 15px; border-bottom: 1px solid var(--border); color: #888; }
+        .log-list span.user { color: var(--accent); font-weight: 500; }
+
+        #loginView { text-align: center; }
+        #mainView { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <h1 style="font-size: 2rem; margin-bottom: 50px;">ACCESS RESTRICTED</h1>
-        <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="onConnect"></div>
-        <div class="g_id_signin" data-type="standard"></div>
-    </div>
-
-    <div class="container">
-        <header>
-            <h1>ROSA PARKS</h1>
-            <p id="user-display" style="color: var(--neon); margin-top: 10px;"></p>
-        </header>
-
-        <div class="grid" id="services-grid">
-            </div>
-
-        <div id="admin-zone">
-            <h2 class="admin-header">> COMMAND_CENTER [ROOT]</h2>
+    <div class="wrapper">
+        <div class="container" id="app">
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                <div>
-                    <h3>AJOUTER SERVICE</h3>
-                    <input type="text" id="new-emoji" placeholder="EMOJI">
-                    <input type="text" id="new-title" placeholder="TITRE">
-                    <input type="text" id="new-link" placeholder="LIEN URL">
-                    <button class="btn" onclick="ui.addService()">INJECTER SERVICE</button>
-                </div>
-                
-                <div>
-                    <h3>CAS CONFIGURATOR (PRONOTE)</h3>
-                    <input type="text" id="cas-id" placeholder="ID CAS UNIQUE (EX: RP-992)">
-                    <select id="user-selector">
-                        <option>CHARGEMENT DES UTILISATEURS...</option>
-                    </select>
-                    <button class="btn" onclick="ui.linkCAS()">LIER CAS AU MAIL</button>
-                </div>
+            <div id="loginView">
+                <h1>CAMPUS RP</h1>
+                <div class="neon-line" style="margin: 0 auto 40px;"></div>
+                <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="onAuth"></div>
+                <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
             </div>
 
-            <div style="margin-top: 40px;">
-                <h3>SYSTEM LOGS</h3>
-                <div id="log-display"></div>
+            <div id="mainView">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h1 id="welcomeTitle">ACCESS</h1>
+                        <div class="neon-line"></div>
+                    </div>
+                    <div id="badgeAdmin"></div>
+                </div>
+
+                <div class="grid" id="gridServices"></div>
+
+                <div id="adminArea">
+                    <div class="admin-header">
+                        <h2>SYSTEM OVERRIDE</h2>
+                        <span>| Root Access ce.0227235a</span>
+                    </div>
+
+                    <div class="cas-config-box">
+                        <h3>Générateur de Configuration CAS</h3>
+                        <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;">Créez un CAS pour lier un mail à la connexion automatique Pronote.</p>
+                        
+                        <div class="input-group">
+                            <input type="text" id="casUserMail" placeholder="Mail de l'élève (ex: nom.prenom@...)">
+                            <button class="btn-accent" onclick="generateCAS()">GÉNÉRER & COPIER</button>
+                        </div>
+                        <p id="casStatus" style="font-size: 0.85rem; color: var(--accent); display: none;">✓ CAS généré et copié ! Prêt à être injecté.</p>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="newSrvEmoji" placeholder="Emoji">
+                        <input type="text" id="newSrvName" placeholder="Titre du service">
+                        <input type="text" id="newSrvLink" placeholder="URL">
+                        <button class="btn-accent" onclick="addNewService()">AJOUTER</button>
+                    </div>
+
+                    <h3>TRAFFIC LOGS</h3>
+                    <table class="log-list">
+                        <tbody id="logDisplay"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
