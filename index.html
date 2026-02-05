@@ -2,145 +2,155 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>RP Cloud | Infrastructure</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>RP Cloud | Infrastructure v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --accent: #00ff88;
             --admin: #ff0055;
-            --bg: #050505;
-            --glass: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #030303;
+            --panel: rgba(10, 10, 10, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
 
-        /* Background FX */
-        .mesh {
+        /* Effet de grille animée en fond */
+        .bg-grid {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 40px 40px; z-index: -1;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: -1;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
         }
 
-        .container {
-            height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
+        .container { height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
 
         .main-frame {
-            background: var(--glass);
-            backdrop-filter: blur(50px);
+            background: var(--panel);
+            backdrop-filter: blur(30px);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            width: 100%; max-width: 1000px; height: 80vh;
+            border-radius: 30px;
+            width: 100%; max-width: 1100px; height: 85vh;
             display: flex; flex-direction: column;
-            box-shadow: 0 0 100px rgba(0,0,0,0.5);
-            position: relative;
+            box-shadow: 0 0 150px rgba(0, 255, 136, 0.05);
+            position: relative; overflow: hidden;
         }
 
-        /* Barre supérieure type OS */
+        .main-frame::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
         .top-bar {
-            padding: 15px 25px; border-bottom: 1px solid var(--border);
+            padding: 20px 30px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255,255,255,0.02);
         }
 
-        .status-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px var(--accent); }
-
-        /* Sections */
         .view { display: none; padding: 40px; overflow-y: auto; flex: 1; }
-        .view.active { display: block; animation: slideIn 0.4s ease-out; }
+        .view.active { display: block; animation: zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        /* Admin UI */
-        .admin-section { margin-top: 30px; padding: 25px; background: rgba(255,0,85,0.03); border: 1px solid rgba(255,0,85,0.1); border-radius: 15px; }
-        input, select { 
-            background: #111; border: 1px solid var(--border); color: #fff; 
-            padding: 12px; border-radius: 8px; width: 100%; margin-bottom: 10px; outline: none;
+        /* Grid Services */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 40px 20px; border-radius: 20px; text-decoration: none; color: #fff;
+            text-align: center; transition: all 0.4s; position: relative;
         }
-        input:focus { border-color: var(--accent); }
+        .card:hover { 
+            background: rgba(0, 255, 136, 0.05); 
+            border-color: var(--accent); 
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+        .emoji { font-size: 45px; display: block; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+
+        /* Section Admin Styles */
+        .admin-box { 
+            background: rgba(255, 0, 85, 0.05); border: 1px solid rgba(255, 0, 85, 0.2);
+            padding: 30px; border-radius: 25px; margin-top: 40px;
+        }
+        input { 
+            background: #000; border: 1px solid var(--border); color: #fff; padding: 15px; 
+            border-radius: 12px; margin-bottom: 10px; width: 100%; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
 
         .btn {
-            background: #fff; color: #000; padding: 12px 25px; border-radius: 8px;
-            border: none; font-weight: 600; cursor: pointer; transition: 0.3s;
+            background: #fff; color: #000; padding: 15px 30px; border-radius: 12px;
+            border: none; font-weight: 800; cursor: pointer; transition: 0.3s;
         }
-        .btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .btn:hover { background: var(--accent); transform: scale(1.05); }
         .btn-admin { background: var(--admin); color: #fff; }
 
-        /* Grid */
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .card {
-            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
-            padding: 30px 20px; border-radius: 15px; text-decoration: none; color: #fff;
-            text-align: center; transition: 0.3s;
-        }
-        .card:hover { background: rgba(255,255,255,0.05); border-color: var(--accent); }
-        .emoji { font-size: 30px; display: block; margin-bottom: 10px; }
+        .log-table { width: 100%; margin-top: 20px; border-spacing: 0 8px; border-collapse: separate; }
+        .log-table td { background: rgba(255,255,255,0.02); padding: 15px; font-size: 13px; }
+        .log-table td:first-child { border-radius: 10px 0 0 10px; color: var(--accent); }
+        .log-table td:last-child { border-radius: 0 10px 10px 0; }
 
-        /* Logs table */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; color: #888; }
-        th { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); color: #fff; }
-        td { padding: 10px; border-bottom: 1px solid var(--border); }
-
-        .error-msg { color: var(--admin); background: rgba(255,0,85,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; }
+        #login-view { text-align: center; padding-top: 10vh; }
     </style>
 </head>
 <body>
-    <div class="mesh"></div>
+    <div class="bg-grid"></div>
     <div class="container">
         <div class="main-frame">
             <div class="top-bar">
-                <div><span class="status-dot"></span><span style="font-weight:700; letter-spacing:1px;">RP-INFRA.01</span></div>
-                <div id="user-pill" style="font-size: 12px; color: #666;">Waiting Auth...</div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:12px; height:12px; background:var(--accent); border-radius:50%; box-shadow:0 0 15px var(--accent);"></div>
+                    <span style="font-weight:800; letter-spacing:2px; font-size:14px;">ROSA PARKS OS</span>
+                </div>
+                <div id="user-info" style="font-size: 12px; opacity:0.6; font-weight:500;">SYSTÈME HORS LIGNE</div>
             </div>
 
             <div id="view-login" class="view active">
-                <div style="max-width: 400px; margin: 100px auto; text-align: center;">
-                    <h1 style="font-size: 40px; margin-bottom: 10px;">Connect</h1>
-                    <p style="color: #555; margin-bottom: 30px;">Système d'accès Campus Rosa Parks</p>
-                    <div id="error-box" class="error-msg">Accès refusé. Domaine invalide.</div>
-                    <div id="g_id_onload" 
-                         data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" 
-                         data-callback="onAuth"></div>
-                    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-shape="pill"></div>
+                <div id="login-view">
+                    <h1 style="font-size: 3.5rem; font-weight:800; margin-bottom:10px;">Connect_</h1>
+                    <p style="opacity:0.4; margin-bottom:40px; letter-spacing:1px;">IDENTIFICATION BIOMÉTRIQUE GOOGLE REQUISE</p>
+                    <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="onAuth"></div>
+                    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
                 </div>
             </div>
 
             <div id="view-dash" class="view">
-                <h2 style="margin-bottom: 30px;">Infrastructure Services</h2>
+                <h2 style="font-size: 24px; margin-bottom: 30px; letter-spacing: -1px;">Services Autorisés</h2>
                 <div class="services-grid" id="srv-grid"></div>
 
                 <div id="admin-zone" style="display:none;">
-                    <div class="admin-section">
-                        <h3 style="color:var(--admin); margin-bottom:15px;">Générateur de CAS Pronote</h3>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="cas-mail" placeholder="Mail de l'élève (@campus-rosaparks.fr)">
-                            <button class="btn btn-admin" onclick="generateCAS()">Générer & Lier</button>
+                    <div class="admin-box">
+                        <h3 style="color:var(--admin); margin-bottom:20px; font-weight:800;">⚙️ CONTRÔLE MAÎTRE (ADMIN)</h3>
+                        
+                        <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:20px;">
+                            <p style="font-size:12px; margin-bottom:10px; opacity:0.6;">GÉNÉRATEUR DE TICKET CAS (BYPASS PRONOTE)</p>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="cas-mail" placeholder="julien.messai@campus-rosaparks.fr">
+                                <button class="btn btn-admin" onclick="generateCAS()">LINK_ACCOUNT</button>
+                            </div>
+                            <div id="cas-status" style="margin-top:10px; font-size:12px;"></div>
                         </div>
-                        <div id="cas-result" style="margin-top:10px; font-family:monospace; font-size:12px; color:var(--accent);"></div>
-                    </div>
 
-                    <div class="admin-section">
-                        <h3>Configuration Services</h3>
                         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px;">
-                            <input type="text" id="new-emoji" placeholder="🚀">
-                            <input type="text" id="new-title" placeholder="Nom">
-                            <input type="text" id="new-link" placeholder="URL">
-                            <button class="btn" onclick="addNewService()">+</button>
+                            <input type="text" id="add-emoji" placeholder="Emoji">
+                            <input type="text" id="add-name" placeholder="Nom du Service">
+                            <input type="text" id="add-url" placeholder="URL">
+                            <button class="btn" onclick="pushService()">PUBLIER</button>
                         </div>
-                    </div>
 
-                    <div class="admin-section">
-                        <h3>Logs Réseau</h3>
-                        <table>
-                            <thead><tr><th>USER</th><th>TIMESTAMP</th><th>ACTION</th></tr></thead>
+                        <h3 style="margin: 30px 0 15px 0;">Flux Réseau (Logs)</h3>
+                        <table class="log-table">
                             <tbody id="log-list"></tbody>
                         </table>
                     </div>
                 </div>
-                <button onclick="location.reload()" style="background:none; border:none; color:#333; cursor:pointer; margin-top:40px;">Shut down system</button>
+                
+                <div style="margin-top:50px; padding-top:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between;">
+                    <button class="btn" style="background:transparent; color:#444; border:1px solid #222;" onclick="location.reload()">TERMINER LA SESSION</button>
+                    <span style="font-size:10px; opacity:0.2;">V2.0.4 - ENCRYPTED</span>
+                </div>
             </div>
         </div>
     </div>
