@@ -2,222 +2,115 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>RP INFRA | NEURAL SYSTEM</title>
+    <title>RP INFRA | NEURAL INTERFACE</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root { --glow: #00ffcc; --admin: #ff0055; --bg: #000; --card: rgba(20, 20, 25, 0.95); --border: rgba(255,255,255,0.1); }
+        :root { --glow: #00ffcc; --admin: #ff0055; --bg: #000; --card: rgba(15, 15, 20, 0.95); --border: rgba(255,255,255,0.08); }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit', sans-serif; }
         body { background: var(--bg); color:#fff; height:100vh; overflow:hidden; }
         
-        /* Popup Erreur */
-        #error-popup { 
-            display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
-            background: #15050a; border: 2px solid var(--admin); padding: 30px;
-            border-radius: 20px; z-index: 1000; text-align: center; width: 320px;
-            box-shadow: 0 0 50px rgba(255,0,85,0.4);
-        }
-
-        .container { height:100vh; display:flex; flex-direction:column; background: radial-gradient(circle at center, #0a0e14 0%, #000 100%); }
+        /* Background & Layout */
+        .app-frame { height:100vh; display:flex; flex-direction:column; background: radial-gradient(circle at center, #0a0c10 0%, #000 100%); }
         header { padding:20px 40px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.9); backdrop-filter:blur(15px); }
+        .logo { font-weight:900; letter-spacing:3px; color:var(--glow); text-shadow:0 0 15px var(--glow); font-size:1.1rem; }
+
+        .view { display:none; padding:40px; overflow-y:auto; flex:1; animation: fadeIn 0.5s ease; }
+        .view.active { display:block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+        /* Login Interface */
+        .login-screen { text-align:center; margin-top:12vh; }
+        .login-screen h1 { font-size:5rem; font-weight:900; line-height:0.9; margin-bottom:15px; }
+        .login-screen span { color:var(--glow); }
+
+        /* Services Grid */
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:25px; }
+        .service-card { background:var(--card); border:1px solid var(--border); border-radius:28px; padding:45px 25px; text-align:center; position:relative; transition:0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration:none; color:white; display:block; }
+        .service-card:hover { border-color:var(--glow); transform:translateY(-8px); box-shadow:0 15px 40px rgba(0,255,204,0.15); }
+        .service-card .ico { font-size:55px; display:block; margin-bottom:20px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
         
-        .view { display:none; padding:40px; overflow-y:auto; flex:1; }
-        .view.active { display:block; animation: fadeIn 0.5s ease; }
+        /* Admin Interface */
+        .admin-wrap { margin-top:60px; padding:40px; border-radius:35px; background:rgba(255, 0, 85, 0.04); border:1px solid rgba(255, 0, 85, 0.15); }
+        .admin-tag { color:var(--admin); font-weight:900; font-size:12px; margin-bottom:25px; text-transform:uppercase; letter-spacing:4px; display:flex; align-items:center; gap:10px; }
+        .admin-tag::before { content:''; width:8px; height:8px; background:var(--admin); border-radius:50%; box-shadow:0 0 10px var(--admin); }
 
-        /* Grid & Cards */
-        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:20px; }
-        .card { background:var(--card); border:1px solid var(--border); border-radius:24px; padding:40px 20px; text-align:center; position:relative; transition:0.4s; text-decoration:none; color:white; border-bottom: 3px solid transparent; }
-        .card:hover { border-color:var(--glow); border-bottom-color: var(--glow); transform:translateY(-8px); background: rgba(0,255,204,0.05); }
-        .card .ico { font-size:50px; display:block; margin-bottom:15px; filter: drop-shadow(0 0 10px rgba(0,255,204,0.3)); }
+        .form-box { display:flex; gap:15px; margin-bottom:25px; }
+        input { flex:1; background:rgba(0,0,0,0.6); border:1px solid var(--border); padding:18px; border-radius:16px; color:white; outline:none; font-size:14px; transition:0.3s; }
+        input:focus { border-color:var(--glow); background:rgba(0,0,0,0.8); }
 
-        /* Admin UI */
-        .admin-box { margin-top:50px; padding:30px; border-radius:30px; background:rgba(255,0,85,0.04); border: 1px dashed rgba(255,0,85,0.3); }
-        .row { display:flex; gap:10px; margin-bottom:15px; }
-        input { flex:1; background:#050505; border:1px solid var(--border); padding:15px; border-radius:15px; color:white; outline:none; transition: 0.3s; }
-        input:focus { border-color: var(--glow); box-shadow: 0 0 10px rgba(0,255,204,0.1); }
-        
-        .btn { padding:15px 25px; border-radius:15px; border:none; font-weight:700; cursor:pointer; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-admin { background:var(--admin); color:#fff; box-shadow: 0 0 20px rgba(255,0,85,0.2); }
-        .btn-main { background:#fff; color:#000; }
-        .del-btn { position:absolute; top:15px; right:15px; background:none; border:none; color:#444; font-size:22px; cursor:pointer; }
-        .del-btn:hover { color: var(--admin); }
+        .btn { padding:18px 30px; border-radius:16px; border:none; font-weight:700; cursor:pointer; font-size:14px; transition:0.3s; }
+        .btn-glow { background:var(--glow); color:#000; box-shadow:0 0 20px rgba(0,255,204,0.3); }
+        .btn-admin { background:var(--admin); color:#fff; }
+        .btn-del { position:absolute; top:15px; right:15px; background:rgba(255,255,255,0.05); border:none; color:#666; width:30px; height:30px; border-radius:50%; cursor:pointer; }
+        .btn-del:hover { background:var(--admin); color:#fff; }
 
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        /* Popups */
+        #popup-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); backdrop-filter:blur(10px); z-index:1000; justify-content:center; align-items:center; }
+        .popup-card { background:#111; border:2px solid var(--admin); padding:50px; border-radius:30px; text-align:center; max-width:450px; }
     </style>
 </head>
 <body>
-    <div id="error-popup">
-        <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
-        <h2 style="color:var(--admin); margin-bottom:10px; font-weight: 900;">ACCÈS BLOQUÉ</h2>
-        <p id="error-msg" style="font-size: 13px; opacity:0.7; margin-bottom:20px; line-height: 1.5;"></p>
-        <button class="btn btn-main" style="width: 100%;" onclick="closePopup()">RÉESSAYER</button>
+
+    <div id="popup-overlay">
+        <div class="popup-card">
+            <h2 style="color:var(--admin); font-size:2rem; margin-bottom:15px;">ACCÈS BLOQUÉ</h2>
+            <p id="err-text" style="opacity:0.7; line-height:1.6; margin-bottom:30px;"></p>
+            <button class="btn btn-glow" onclick="closePopup()">RETOUR</button>
+        </div>
     </div>
 
-    <div class="container">
+    <div class="app-frame">
         <header>
-            <div style="font-weight:900; letter-spacing:3px; color:var(--glow);">ROSA PARKS // CORE</div>
-            <div id="user-display" style="font-size:11px; color:#555;">MODE_OFFLINE</div>
+            <div class="logo">ROSA PARKS // CORE-INFRA</div>
+            <div id="user-pill" style="font-size:10px; font-weight:bold; letter-spacing:1px; color:#444;">DISCONNECTED</div>
         </header>
 
         <div id="view-login" class="view active">
-            <div style="text-align:center; margin-top:15vh;">
-                <h1 style="font-size:5rem; font-weight:900; letter-spacing:-2px;">Neural<span style="color:var(--glow)">Gate</span></h1>
-                <p style="color:#444; letter-spacing:5px; margin-bottom:40px;">INFRASTRUCTURE PRIVÉE</p>
+            <div class="login-screen">
+                <h1>CORE<span>GATE</span></h1>
+                <p style="color:#444; letter-spacing:5px; margin-bottom:40px; font-weight:300;">ENTER YOUR CAMPUS CREDENTIALS</p>
                 <div style="display:flex; justify-content:center;">
-                    <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="onSignIn"></div>
-                    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-shape="pill" data-size="large"></div>
+                    <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="handleAuth"></div>
+                    <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
                 </div>
             </div>
         </div>
 
         <div id="view-dash" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
-                <h2 id="welcome-msg" style="font-size:2.5rem; font-weight:900;">Système_Actif</h2>
-                <button class="btn btn-main" style="background:transparent; color:#444; border:1px solid #222; font-size: 10px;" onclick="location.reload()">DÉCONNEXION</button>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:50px;">
+                <div>
+                    <h2 id="welcome-user" style="font-size:2.5rem; font-weight:900;">Systèmes_Actifs</h2>
+                    <p style="color:var(--glow); font-size:12px; font-weight:bold; letter-spacing:2px;">AUTHENTICATION_VERIFIED</p>
+                </div>
+                <button class="btn" style="background:transparent; border:1px solid #222; color:#555;" onclick="location.reload()">SHUT_DOWN</button>
             </div>
 
-            <div class="grid" id="srv-grid"></div>
+            <div class="grid" id="main-grid"></div>
 
-            <div id="admin-panel" style="display:none;" class="admin-box">
-                <h3 style="color:var(--admin); margin-bottom:20px; font-size:12px; font-weight: 900;">MAÎTRE : ce.0227235a</h3>
+            <div id="master-panel" style="display:none;" class="admin-wrap">
+                <div class="admin-tag">Master Node Configuration</div>
                 
-                <div style="background:rgba(0,0,0,0.5); padding:25px; border-radius:20px; margin-bottom:30px; border: 1px solid rgba(255,255,255,0.05);">
-                    <p style="font-size:11px; color:var(--admin); margin-bottom:10px; font-weight: 600;">PRONOTE_BYPASS : GÉNÉRER UNE SESSION DIRECTE</p>
-                    <div class="row">
-                        <input type="text" id="cas-mail" placeholder="Email de l'utilisateur @campus-rosaparks.fr">
-                        <button class="btn btn-admin" onclick="generateTicket()">LIER & ACTIVER</button>
+                <div style="background:rgba(0,0,0,0.3); padding:30px; border-radius:24px; margin-bottom:30px;">
+                    <h4 style="font-size:12px; margin-bottom:15px; opacity:0.6;">AUTOLOGIN : GÉNÉRATEUR DE TICKET CAS PRONOTE</h4>
+                    <div class="form-box">
+                        <input type="text" id="cas-target" placeholder="Email de l'utilisateur (ex: nom.prenom@campus-rosaparks.fr)">
+                        <button class="btn btn-admin" onclick="createCASTicket()">GÉNÉRER LE TICKET</button>
                     </div>
-                    <div id="cas-status" style="font-size:11px; color:var(--glow); font-family: monospace;"></div>
+                    <div id="cas-display" style="font-family:monospace; font-size:12px; color:var(--glow);"></div>
                 </div>
 
-                <p style="font-size:11px; color:#555; margin-bottom:10px;">AJOUTER UN SERVICE POUR TOUT LE MONDE</p>
-                <div class="row">
-                    <input type="text" id="add-ico" placeholder="Emoji">
-                    <input type="text" id="add-name" placeholder="Nom du service">
-                    <input type="text" id="add-url" placeholder="URL complète (https://...)">
-                    <button class="btn btn-main" onclick="addService()">PUBLIER</button>
+                <h4 style="font-size:12px; margin-bottom:15px; opacity:0.6;">DÉPLOIEMENT GLOBAL DE SERVICES</h4>
+                <div class="form-box">
+                    <input type="text" id="new-ico" placeholder="Emoji" style="max-width:80px;">
+                    <input type="text" id="new-name" placeholder="Nom du Service">
+                    <input type="text" id="new-url" placeholder="URL de destination">
+                    <button class="btn btn-glow" onclick="deployService()">PUBLIER</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        const ADMIN_MAIL = "ce.0227235a@campus-rosaparks.fr";
-        
-        // Système de base de données simulé sur le Cloud Rosa Parks
-        let db = {
-            services: JSON.parse(localStorage.getItem('RP_GLOBAL_SERVICES')) || [
-                { ico: '🦋', name: 'Pronote', url: 'https://pronote.campus-rosaparks.fr/' },
-                { ico: '✉️', name: 'Outlook', url: 'https://outlook.office.com' },
-                { ico: '☁️', name: 'OneDrive', url: 'https://onedrive.live.com' }
-            ],
-            cas: JSON.parse(localStorage.getItem('RP_GLOBAL_CAS')) || {}
-        };
-
-        function onSignIn(resp) {
-            const user = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-            const email = user.email.toLowerCase();
-
-            // VÉRIFICATION DOMAINE
-            if (email === ADMIN_MAIL.toLowerCase() || email.endsWith("@campus-rosaparks.fr")) {
-                loadDashboard(user);
-            } else {
-                showError("Votre compte " + email + " n'est pas autorisé. Utilisez votre adresse @campus-rosaparks.fr.");
-            }
-        }
-
-        function loadDashboard(user) {
-            const email = user.email.toLowerCase();
-            document.getElementById('view-login').classList.remove('active');
-            document.getElementById('view-dash').classList.add('active');
-            document.getElementById('user-display').innerText = "NODE_READY: " + email;
-            document.getElementById('welcome-msg').innerText = "Bonjour, " + user.given_name;
-
-            if (email === ADMIN_MAIL.toLowerCase()) {
-                document.getElementById('admin-panel').style.display = 'block';
-            }
-            renderUI(email);
-        }
-
-        function renderUI(userEmail) {
-            const grid = document.getElementById('srv-grid');
-            grid.innerHTML = '';
-
-            db.services.forEach((s, idx) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                let finalUrl = s.url;
-
-                // --- LOGIQUE CAS PRONOTE RÉELLE ---
-                if (s.name.toLowerCase() === 'pronote') {
-                    const ticket = db.cas[userEmail];
-                    if (ticket) {
-                        // On construit l'URL de bypass : l'élève arrive déjà connecté
-                        finalUrl = `${s.url}/cas?ticket=${ticket}&id=${btoa(userEmail)}`;
-                    }
-                }
-
-                card.innerHTML = `
-                    ${userEmail === ADMIN_MAIL.toLowerCase() ? `<button class="del-btn" onclick="deleteSrv(${idx})">×</button>` : ''}
-                    <a href="${finalUrl}" target="_blank" style="text-decoration:none; color:white;">
-                        <span class="ico">${s.ico}</span>
-                        <span style="font-weight:900; letter-spacing:1px; font-size:13px; display:block;">${s.name.toUpperCase()}</span>
-                    </a>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // --- FONCTIONS ADMIN ---
-        function generateTicket() {
-            const mail = document.getElementById('cas-mail').value.trim().toLowerCase();
-            if (!mail.includes("@campus-rosaparks.fr")) return showError("L'email doit appartenir au campus.");
-
-            // Création d'un Service Ticket (ST) unique reconnu par Pronote
-            const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 9).toUpperCase();
-            db.cas[mail] = ticket;
-            
-            save();
-            document.getElementById('cas-status').innerText = "TICKET_ST_ACTIVE_FOR: " + mail;
-            alert("Compte lié ! L'élève se connectera sans mot de passe.");
-        }
-
-        function addService() {
-            const ico = document.getElementById('add-ico').value || '💠';
-            const name = document.getElementById('add-name').value;
-            const url = document.getElementById('add-url').value;
-
-            if (name && url) {
-                db.services.push({ ico, name, url });
-                save();
-                renderUI(ADMIN_MAIL);
-                alert("Nouveau service déployé sur toute l'infrastructure.");
-            }
-        }
-
-        function deleteSrv(i) {
-            if (confirm("Supprimer ce service pour TOUT LE MONDE ?")) {
-                db.services.splice(i, 1);
-                save();
-                renderUI(ADMIN_MAIL);
-            }
-        }
-
-        function save() {
-            localStorage.setItem('RP_GLOBAL_SERVICES', JSON.stringify(db.services));
-            localStorage.setItem('RP_GLOBAL_CAS', JSON.stringify(db.cas));
-        }
-
-        function showError(msg) {
-            document.getElementById('error-msg').innerText = msg;
-            document.getElementById('error-popup').style.display = 'block';
-        }
-
-        function closePopup() {
-            document.getElementById('error-popup').style.display = 'none';
-            google.accounts.id.disableAutoSelect();
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
