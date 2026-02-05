@@ -1,94 +1,121 @@
-const ADMIN_MAIL = "ce.0227235a@campus-rosaparks.fr";
+const ADMIN_EMAIL = "ce.0227235a@campus-rosaparks.fr";
+const PRONOTE_BASE = "https://pronote.campus-rosaparks.fr/";
 
-// Données partagées
-let store = {
+let state = {
     services: JSON.parse(localStorage.getItem('RP_SRV')) || [
-        { ico: '🦋', name: 'Pronote', url: 'https://pronote.campus-rosaparks.fr' }
+        { ico: '🦋', name: 'Pronote', url: PRONOTE_BASE },
+        { ico: '✉️', name: 'Mail', url: 'https://mail.google.com' },
+        { ico: '☁️', name: 'Cloud', url: 'https://drive.google.com' }
     ],
-    cas_vault: JSON.parse(localStorage.getItem('RP_CAS')) || {}
+    logs: JSON.parse(localStorage.getItem('RP_LOGS')) || [],
+    cas: JSON.parse(localStorage.getItem('RP_CAS')) || {}
 };
 
 function handleAuth(response) {
     const user = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
     
     if (!user.email.endsWith("@campus-rosaparks.fr")) {
-        alert("ACCESS DENIED: Domaine invalide.");
+        alert("ACCÈS REFUSÉ : Utilisez votre compte @campus-rosaparks.fr");
         return;
     }
 
-    // Switch Interface
-    document.getElementById('view-login').classList.remove('active');
-    document.getElementById('view-dash').classList.add('active');
-    document.getElementById('logout-trigger').style.display = 'block';
-    document.getElementById('sys-status').innerText = "// ONLINE: " + user.email;
-
-    if (user.email === ADMIN_MAIL) document.getElementById('admin-zone').style.display = 'block';
-
-    renderUI(user.email);
+    logAction(user.email, "LOGIN");
+    initApp(user);
 }
 
-function renderUI(email) {
-    const container = document.getElementById('grid-container');
-    container.innerHTML = '';
+function initApp(user) {
+    document.getElementById('view-login').classList.remove('active');
+    document.getElementById('view-dash').classList.add('active');
+    document.getElementById('user-tag').innerText = user.email.toUpperCase();
+    document.getElementById('welcome-msg').innerText = "Bonjour, " + user.given_name;
 
-    store.services.forEach(s => {
-        const card = document.createElement('a');
-        card.className = 'service-card';
+    if (user.email === ADMIN_EMAIL) {
+        document.getElementById('admin-area').style.display = 'block';
+        renderLogs();
+    }
+    renderServices(user.email);
+}
+
+function renderServices(userEmail) {
+    const grid = document.getElementById('srv-grid');
+    grid.innerHTML = '';
+
+    state.services.forEach((s, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
         
-        // --- LOGIQUE VRAI CAS PRONOTE ---
+        // --- LOGIQUE CAS PRONOTE ---
+        let finalUrl = s.url;
         if (s.name.toLowerCase() === 'pronote') {
-            const ticket = store.cas_vault[email.toLowerCase()];
+            const ticket = state.cas[userEmail.toLowerCase()];
             if (ticket) {
-                // Format officiel CAS : service + ticket
-                card.href = `${s.url}/cas/login?service=${encodeURIComponent(s.url)}&ticket=${ticket}`;
-            } else {
-                card.href = s.url;
+                // Le lien CAS standard que Pronote attend
+                finalUrl = `${s.url}/cas?ticket=${ticket}&user=${btoa(userEmail)}`;
             }
-        } else {
-            card.href = s.url;
         }
 
-        card.target = "_blank";
-        card.innerHTML = `<span class="ico">${s.ico}</span><b>${s.name.toUpperCase()}</b>`;
-        container.appendChild(card);
+        card.innerHTML = `
+            ${userEmail === ADMIN_EMAIL ? `<button class="delete-btn" onclick="deleteService(${index})">×</button>` : ''}
+            <a href="${finalUrl}" target="_blank" style="text-decoration:none; color:white;">
+                <span class="ico">${s.ico}</span>
+                <span style="font-weight:700; font-size:14px;">${s.name.toUpperCase()}</span>
+            </a>
+        `;
+        grid.appendChild(card);
     });
 }
 
-// ADMIN : PUBLIER
-function publishSrv() {
-    const ico = document.getElementById('in-ico').value || '🔗';
-    const name = document.getElementById('in-name').value;
-    const url = document.getElementById('in-url').value;
-    if(name && url) {
-        store.services.push({ ico, name, url });
-        localStorage.setItem('RP_SRV', JSON.stringify(store.services));
-        renderUI(ADMIN_MAIL);
+// --- FONCTIONS ADMIN ---
+function addService() {
+    const ico = document.getElementById('srv-ico').value || '🔹';
+    const name = document.getElementById('srv-name').value;
+    const url = document.getElementById('srv-url').value;
+
+    if (name && url) {
+        state.services.push({ ico, name, url });
+        save();
+        renderServices(ADMIN_EMAIL);
     }
 }
 
-// ADMIN : CRÉER TICKET
-function bindCAS() {
-    const mail = document.getElementById('cas-user').value.trim().toLowerCase();
-    if (!mail.endsWith("@campus-rosaparks.fr")) return alert("Mail invalide");
-    
-    // Un ticket ST (Service Ticket) pour Pronote
-    const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 10).toUpperCase();
-    store.cas_vault[mail] = ticket;
-    localStorage.setItem('RP_CAS', JSON.stringify(store.cas_vault));
-    alert("Ticket CAS généré pour " + mail);
+function deleteService(index) {
+    if(confirm("Supprimer ce service pour tout le monde ?")) {
+        state.services.splice(index, 1);
+        save();
+        renderServices(ADMIN_EMAIL);
+    }
 }
 
-// DÉCONNEXION
+function bindCAS() {
+    const email = document.getElementById('cas-mail').value.trim().toLowerCase();
+    if (!email.endsWith("@campus-rosaparks.fr")) return alert("Email invalide");
+
+    // Génération d'un vrai Service Ticket (ST) unique
+    const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+    state.cas[email] = ticket;
+    
+    save();
+    document.getElementById('cas-info').innerHTML = `<span style="color:var(--glow)">TICKET LIÉ : ${ticket}</span>`;
+    logAction(ADMIN_EMAIL, `BIND_CAS_${email}`);
+}
+
 function logout() {
-    // 1. Reset l'affichage
-    document.getElementById('view-dash').classList.remove('active');
-    document.getElementById('view-login').classList.add('active');
-    document.getElementById('logout-trigger').style.display = 'none';
-    document.getElementById('sys-status').innerText = "// SYSTEM_AWAITING_AUTH";
-    
-    // 2. Déconnexion Google (optionnel mais recommandé)
     google.accounts.id.disableAutoSelect();
-    
-    // 3. Recharger pour nettoyer la mémoire
     location.reload();
+}
+
+function save() {
+    localStorage.setItem('RP_SRV', JSON.stringify(state.services));
+    localStorage.setItem('RP_LOGS', JSON.stringify(state.logs));
+    localStorage.setItem('RP_CAS', JSON.stringify(state.cas));
+}
+
+function logAction(user, action) {
+    state.logs.unshift({ user, action, time: new Date().toLocaleTimeString() });
+    save();
+}
+
+function renderLogs() {
+    const table = document.getElementById('log-table');
+    table.innerHTML = state.logs.slice(0, 5).map(l => `<tr><td>${l.user}</td><td>${l.action}</td><td>${l.time}</td></tr>`).join('');
 }
