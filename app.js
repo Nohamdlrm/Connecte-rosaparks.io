@@ -1,110 +1,115 @@
-const MASTER_UID = "ce.0227235a@campus-rosaparks.fr";
-const PRONOTE_BASE = "https://pronote.campus-rosaparks.fr/";
+const ADMIN_ID = "ce.0227235a@campus-rosaparks.fr";
+const PRONOTE_URL = "https://pronote.campus-rosaparks.fr/";
 
-// Récupération des données partagées (simulation base de données)
-let db = {
-    services: JSON.parse(localStorage.getItem('RP_SERVICES')) || [
-        { emoji: '🦋', name: 'Pronote', url: PRONOTE_BASE },
-        { emoji: '✉️', name: 'Webmail', url: 'https://mail.google.com' }
+// Base de données "Cloud" simulée
+let infraData = {
+    services: JSON.parse(localStorage.getItem('RP_INFRA_SRV')) || [
+        { ico: '🦋', name: 'Pronote', url: PRONOTE_URL },
+        { ico: '✉️', name: 'Webmail', url: 'https://mail.google.com' },
+        { ico: '📂', name: 'Drive', url: 'https://drive.google.com' }
     ],
-    logs: JSON.parse(localStorage.getItem('RP_LOGS')) || [],
-    cas: JSON.parse(localStorage.getItem('RP_CAS_VAULT')) || {} 
+    logs: JSON.parse(localStorage.getItem('RP_INFRA_LOGS')) || [],
+    cas_vault: JSON.parse(localStorage.getItem('RP_INFRA_CAS')) || {}
 };
 
-function onAuth(response) {
-    const payload = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+function handleAuth(response) {
+    const user = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
     
-    // SÉCURITÉ DOMAINE : STOPE TOUT SI PAS CAMPUS
-    if (!payload.email.endsWith("@campus-rosaparks.fr")) {
-        alert("CRITICAL ERROR: ACCESS_DENIED. Seul le domaine @campus-rosaparks.fr est autorisé.");
+    // Blocage domaine
+    if (!user.email.endsWith("@campus-rosaparks.fr")) {
+        alert("CRITICAL ERROR: ACCESS DENIED. ACCOUNT_NOT_IN_DOMAIN");
         return;
     }
 
-    pushLog(payload.email, "LOGIN_AUTHORIZED");
-    loadInterface(payload);
+    pushLog(user.email, "NODE_CONNECTED");
+    renderApp(user);
 }
 
-function loadInterface(user) {
-    document.getElementById('view-login').classList.remove('active');
+function renderApp(user) {
+    document.getElementById('view-login').style.display = 'none';
     document.getElementById('view-dash').classList.add('active');
-    document.getElementById('user-info').innerText = `CONNECTED AS: ${user.email.toUpperCase()}`;
+    document.getElementById('status-display').innerText = "SYSTEM_ENCRYPTED // " + user.email;
+    document.getElementById('user-mail').innerText = user.email;
+    document.getElementById('welcome-txt').innerText = "Content de vous revoir, " + user.given_name;
 
-    // AFFICHAGE ADMIN
-    if (user.email === MASTER_UID) {
-        document.getElementById('admin-zone').style.display = 'block';
-        updateLogTable();
+    if (user.email === ADMIN_ID) {
+        document.getElementById('admin-panel').style.display = 'block';
+        refreshLogs();
     }
-    
-    refreshServiceGrid(user.email);
+
+    drawServices(user.email);
 }
 
-// RENDU DYNAMIQUE DES SERVICES
-function refreshServiceGrid(currentEmail) {
-    const grid = document.getElementById('srv-grid');
-    grid.innerHTML = '';
+function drawServices(email) {
+    const container = document.getElementById('srv-grid');
+    container.innerHTML = '';
 
-    db.services.forEach(s => {
+    infraData.services.forEach(s => {
         const card = document.createElement('a');
-        card.className = 'card';
+        card.className = 'cyber-card';
         
-        // LOGIQUE DU BYPASS PRONOTE (CAS VIRTUEL)
+        // Logique de Bypass Pronote
         if (s.name.toLowerCase() === 'pronote') {
-            const ticket = db.cas[currentEmail.toLowerCase()];
+            const ticket = infraData.cas_vault[email.toLowerCase()];
             if (ticket) {
-                // Si l'admin a généré un ticket, on bypass le login
-                card.href = `${s.url}?ticket=${ticket}&sso=true&user=${btoa(currentEmail)}`;
+                // On injecte le ticket pour bypasser le login
+                card.href = `${s.url}?ticket=${ticket}&sso=true&user=${btoa(email)}`;
             } else {
-                card.href = s.url;
+                card.href = s.link;
             }
         } else {
             card.href = s.url;
         }
 
         card.target = "_blank";
-        card.innerHTML = `<span class="emoji">${s.emoji}</span><span style="letter-spacing:1px; font-weight:500;">${s.name}</span>`;
-        grid.appendChild(card);
+        card.innerHTML = `<span class="ico">${s.ico}</span><span style="font-weight:700; letter-spacing:1px; font-size:14px;">${s.name.toUpperCase()}</span>`;
+        container.appendChild(card);
     });
 }
 
-// FONCTION ADMIN : PUBLIER POUR TOUT LE MONDE
-function pushService() {
-    const emoji = document.getElementById('add-emoji').value || '🔗';
-    const name = document.getElementById('add-name').value;
-    const url = document.getElementById('add-url').value;
+// ADMIN : AJOUTER UN SERVICE POUR TOUT LE MONDE
+function addGlobalService() {
+    const ico = document.getElementById('new-ico').value || '💠';
+    const name = document.getElementById('new-name').value;
+    const url = document.getElementById('new-url').value;
 
     if (name && url) {
-        db.services.push({ emoji, name, url });
-        localStorage.setItem('RP_SERVICES', JSON.stringify(db.services));
-        refreshServiceGrid(MASTER_UID);
-        pushLog(MASTER_UID, `NEW_SERVICE_DEPLOYED: ${name}`);
-        alert("Service publié pour tous les comptes du campus !");
+        infraData.services.push({ ico, name, url });
+        localStorage.setItem('RP_INFRA_SRV', JSON.stringify(infraData.services));
+        drawServices(ADMIN_ID);
+        pushLog(ADMIN_ID, `DEPLOYED_SERVICE_${name}`);
+        alert("Service synchronisé sur tous les comptes du campus.");
     }
 }
 
-// FONCTION ADMIN : GÉNÉRER CAS (AUTO-LOGIN)
-function generateCAS() {
-    const email = document.getElementById('cas-mail').value.trim().toLowerCase();
-    if (!email.endsWith("@campus-rosaparks.fr")) return alert("Mail invalide");
+// ADMIN : CRÉER UN TICKET CAS (AUTO-LOGIN)
+function createCAS() {
+    const email = document.getElementById('cas-target').value.trim().toLowerCase();
+    if (!email.endsWith("@campus-rosaparks.fr")) return alert("DOMAINE_INVALID");
 
-    // Génération d'un ticket unique pour bypasser le mdp Pronote
-    const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7).toUpperCase();
-    db.cas[email] = ticket;
+    // Génération d'un ticket format standard CAS
+    const ticket = "ST-" + Math.random().toString(36).substring(2, 12).toUpperCase() + "-" + Date.now();
+    infraData.cas_vault[email] = ticket;
     
-    localStorage.setItem('RP_CAS_VAULT', JSON.stringify(db.cas));
-    document.getElementById('cas-status').innerHTML = `<span style="color:var(--accent)">SUCCESS: Ticket linked to ${email}</span>`;
+    localStorage.setItem('RP_INFRA_CAS', JSON.stringify(infraData.cas_vault));
+    document.getElementById('cas-msg').innerHTML = `<span style="color:var(--glow)">TICKET_ST_ACTIVE_FOR: ${email}</span>`;
     
-    pushLog(MASTER_UID, `BYPASS_TICKET_CREATED: ${email}`);
+    pushLog(ADMIN_ID, `BYPASS_AUTH_GENERATED: ${email}`);
 }
 
 function pushLog(user, action) {
-    db.logs.unshift({ user, action, time: new Date().toLocaleTimeString() });
-    localStorage.setItem('RP_LOGS', JSON.stringify(db.logs));
-    if (user === MASTER_UID) updateLogTable();
+    infraData.logs.unshift({ user, action, time: new Date().toLocaleTimeString() });
+    localStorage.setItem('RP_INFRA_LOGS', JSON.stringify(infraData.logs));
+    if (user === ADMIN_ID) refreshLogs();
 }
 
-function updateLogTable() {
-    const list = document.getElementById('log-list');
-    list.innerHTML = db.logs.slice(0, 8).map(l => 
-        `<tr><td>${l.user}</td><td>${l.time}</td><td style="color:#666">${l.action}</td></tr>`
-    ).join('');
+function refreshLogs() {
+    const table = document.getElementById('log-table');
+    table.innerHTML = infraData.logs.slice(0, 10).map(l => `
+        <tr>
+            <td style="color:var(--glow)">${l.user}</td>
+            <td>${l.time}</td>
+            <td>${l.action}</td>
+        </tr>
+    `).join('');
 }
