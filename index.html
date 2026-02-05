@@ -2,99 +2,97 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>RP CLOUD // SECURE GATEWAY</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <title>ROSA PARKS | NEURAL SYSTEM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;700;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root { --glow: #00f2ff; --admin: #ff0055; --bg: #000; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; }
-        body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
-
-        /* Animation de fond */
-        .scanline { width: 100%; height: 2px; background: rgba(0, 242, 255, 0.1); position: fixed; top: 0; z-index: 10; animation: scan 4s linear infinite; pointer-events: none; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-
-        .app-container { height: 100vh; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #080808 0%, #000 100%); }
-
-        .glass-panel {
-            width: 90%; max-width: 1100px; height: 80vh;
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 40px;
-            display: flex; flex-direction: column;
-            position: relative; box-shadow: 0 0 100px rgba(0,0,0,1);
-        }
-
-        /* Top Bar */
-        .top-nav { padding: 25px 40px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .sys-status { font-size: 11px; letter-spacing: 2px; color: var(--glow); text-transform: uppercase; }
-
-        /* Views */
-        .view { display: none; padding: 50px; overflow-y: auto; flex: 1; }
-        .view.active { display: block; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Login view */
-        .login-center { text-align: center; margin-top: 15vh; }
-        .login-center h1 { font-size: 3rem; font-weight: 300; margin-bottom: 40px; }
-
-        /* Dashboard */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .service-card {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 20px; padding: 40px 20px; text-align: center; cursor: pointer;
-            transition: 0.3s; text-decoration: none; color: white; display: block;
-        }
-        .service-card:hover { border-color: var(--glow); background: rgba(0, 242, 255, 0.05); transform: translateY(-5px); }
-        .ico { font-size: 40px; margin-bottom: 15px; display: block; }
-
-        /* Admin area */
-        .admin-box { margin-top: 50px; padding: 30px; border-radius: 25px; border: 1px solid rgba(255,0,85,0.3); background: rgba(255,0,85,0.02); }
-        input { background: #000; border: 1px solid #333; color: #fff; padding: 15px; border-radius: 12px; width: 100%; margin-bottom: 10px; }
+        :root { --glow: #00f2ff; --admin: #ff0055; --bg: #000; --card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.1); }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif; }
+        body { background: var(--bg); color:#fff; height:100vh; overflow:hidden; }
         
-        /* Logout Button */
-        .logout-btn { background: none; border: 1px solid #333; color: #555; padding: 10px 20px; border-radius: 50px; cursor: pointer; transition: 0.3s; }
-        .logout-btn:hover { border-color: #ff4b2b; color: #ff4b2b; }
+        .app-container { height:100vh; display:flex; justify-content:center; align-items:center; background: radial-gradient(circle at 50% 50%, #0a0a0a 0%, #000 100%); }
+        .holo-frame { width:90%; max-width:1100px; height:80vh; background:var(--card); backdrop-filter:blur(30px); border:1px solid var(--border); border-radius:30px; display:flex; flex-direction:column; position:relative; box-shadow:0 0 100px rgba(0,0,0,0.8); }
+        
+        .top-bar { padding:20px 30px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .logo { font-weight:800; letter-spacing:3px; color:var(--glow); text-shadow:0 0 10px var(--glow); font-size:14px; }
+        
+        .view { display:none; padding:40px; overflow-y:auto; flex:1; }
+        .view.active { display:block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-        .btn-main { background: #fff; color: #000; padding: 15px 30px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        /* AUTH */
+        .auth-center { text-align:center; margin-top:15vh; }
+        .auth-center h1 { font-size:3.5rem; font-weight:200; margin-bottom:10px; }
+        .auth-center b { color:var(--glow); }
+
+        /* GRID */
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:20px; }
+        .card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:20px; padding:30px; text-align:center; text-decoration:none; color:white; transition:0.3s; position:relative; }
+        .card:hover { border-color:var(--glow); background:rgba(0,242,255,0.05); transform:translateY(-5px); }
+        .card .ico { font-size:40px; display:block; margin-bottom:15px; }
+
+        /* ADMIN */
+        .admin-panel { margin-top:40px; padding:30px; border:1px solid rgba(255,0,85,0.2); border-radius:20px; background:rgba(255,0,85,0.02); }
+        .input-row { display:flex; gap:10px; margin-bottom:15px; }
+        input { flex:1; background:#000; border:1px solid var(--border); padding:12px; border-radius:10px; color:white; outline:none; }
+        .btn { padding:12px 20px; border-radius:10px; border:none; font-weight:700; cursor:pointer; transition:0.2s; }
+        .btn-main { background:#fff; color:#000; }
+        .btn-admin { background:var(--admin); color:#fff; }
+        .btn-logout { background:transparent; border:1px solid #333; color:#666; font-size:12px; }
+        .btn-logout:hover { border-color:white; color:white; }
+        .delete-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:#444; cursor:pointer; font-size:18px; }
+        .delete-btn:hover { color:var(--admin); }
+
+        table { width:100%; margin-top:20px; border-collapse:collapse; font-size:12px; color:#666; }
+        td { padding:10px; border-bottom:1px solid #111; }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
     <div class="app-container">
-        <div class="glass-panel">
-            <div class="top-nav">
-                <div class="sys-status" id="sys-status">// SYSTEM_AWAITING_AUTH</div>
-                <button class="logout-btn" id="logout-trigger" style="display:none;" onclick="logout()">LOGOUT</button>
+        <div class="holo-frame">
+            <div class="top-bar">
+                <div class="logo">CAMPUS // ROSA PARKS</div>
+                <div id="user-tag" style="font-size:11px; color:#444;">DISCONNECTED</div>
             </div>
 
             <div id="view-login" class="view active">
-                <div class="login-center">
-                    <h1>CAMPUS<span>ROSA</span>PARKS</h1>
-                    <div style="display: flex; justify-content: center;">
+                <div class="auth-center">
+                    <h1>Secure<b>Portal</b></h1>
+                    <p style="opacity:0.3; margin-bottom:40px;">ACCÈS RÉSERVÉ @CAMPUS-ROSAPARKS.FR</p>
+                    <div style="display:flex; justify-content:center;">
                         <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="handleAuth"></div>
-                        <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
+                        <div class="g_id_signin" data-type="standard" data-theme="filled_black"></div>
                     </div>
                 </div>
             </div>
 
             <div id="view-dash" class="view">
-                <h2 style="margin-bottom: 30px; font-weight: 300;">Portail <span style="color:var(--glow)">Cloud</span></h2>
-                <div class="grid" id="grid-container"></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:40px;">
+                    <h2 id="welcome-msg">Dashboard</h2>
+                    <button class="btn btn-logout" onclick="logout()">DÉCONNEXION</button>
+                </div>
+                
+                <div class="grid" id="srv-grid"></div>
 
-                <div id="admin-zone" style="display:none;" class="admin-box">
-                    <h3 style="color:var(--admin); margin-bottom:20px;">MASTER_CONSOLE</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px;">
-                        <input type="text" id="in-ico" placeholder="Emoji">
-                        <input type="text" id="in-name" placeholder="Nom">
-                        <input type="text" id="in-url" placeholder="Lien">
-                        <button class="btn-main" onclick="publishSrv()">PUBLISH</button>
+                <div id="admin-area" style="display:none;" class="admin-panel">
+                    <h3 style="color:var(--admin); margin-bottom:20px;">ZONE ADMINISTRATEUR</h3>
+                    
+                    <p style="font-size:11px; opacity:0.5; margin-bottom:8px;">CONFIGURER LE BYPASS CAS (PRONOTE)</p>
+                    <div class="input-row">
+                        <input type="text" id="cas-mail" placeholder="Email de l'élève">
+                        <button class="btn btn-admin" onclick="bindCAS()">LIER LE COMPTE</button>
                     </div>
-                    <div style="margin-top:20px;">
-                        <input type="text" id="cas-user" placeholder="Email pour lien CAS Pronote">
-                        <button class="btn-main" style="background:var(--admin); color:#fff;" onclick="bindCAS()">GENERATE CAS TICKET</button>
+                    <div id="cas-info" style="font-size:11px; margin-bottom:30px;"></div>
+
+                    <p style="font-size:11px; opacity:0.5; margin-bottom:8px;">AJOUTER UN SERVICE GLOBAL</p>
+                    <div class="input-row">
+                        <input type="text" id="srv-ico" placeholder="Emoji" style="max-width:70px;">
+                        <input type="text" id="srv-name" placeholder="Titre">
+                        <input type="text" id="srv-url" placeholder="Lien">
+                        <button class="btn btn-main" onclick="addService()">PUBLIER</button>
                     </div>
+
+                    <table id="log-table"></table>
                 </div>
             </div>
         </div>
