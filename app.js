@@ -1,6 +1,7 @@
 const ADMIN_ID = "ce.0227235a@campus-rosaparks.fr";
 const PRONOTE_URL = "https://pronote.campus-rosaparks.fr/";
 
+// Base de données locale
 let data = {
     services: JSON.parse(localStorage.getItem('RP_CORE_SRV')) || [
         { ico: '🦋', name: 'Pronote', url: PRONOTE_URL },
@@ -11,29 +12,49 @@ let data = {
     cas_tokens: JSON.parse(localStorage.getItem('RP_CORE_CAS')) || {}
 };
 
+// FONCTION DE CONNEXION (Appelée par Google)
 function onSignIn(response) {
-    const user = JSON.parse(atob(response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    // Décodage du jeton Google
+    const base64Url = response.credential.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const user = JSON.parse(window.atob(base64));
     
-    if (!user.email.endsWith("@campus-rosaparks.fr")) {
-        alert("ACCESS_DENIED: Seul le domaine @campus-rosaparks.fr est autorisé.");
-        return;
-    }
+    console.log("Tentative de connexion :", user.email);
 
-    logEvent(user.email, "NODE_LOGIN_SUCCESS");
-    startSession(user);
+    // VÉRIFICATION DE SÉCURITÉ
+    const isCampusEmail = user.email.toLowerCase().endsWith("@campus-rosaparks.fr");
+    const isAdmin = user.email.toLowerCase() === ADMIN_ID.toLowerCase();
+
+    if (isCampusEmail || isAdmin) {
+        logEvent(user.email, "NODE_CONNECTED");
+        startSession(user);
+    } else {
+        alert("ACCÈS REFUSÉ : Votre compte n'appartient pas au domaine @campus-rosaparks.fr");
+        console.error("Domaine invalide :", user.email);
+    }
 }
 
 function startSession(user) {
-    document.getElementById('view-login').classList.remove('active');
+    const userEmail = user.email.toLowerCase();
+    
+    // Changement de vue
+    document.getElementById('view-login').style.display = 'none';
     document.getElementById('view-dash').classList.add('active');
-    document.getElementById('user-status').innerText = `NODE: ${user.email.toUpperCase()}`;
-    document.getElementById('welcome-msg').innerText = `Bonjour, ${user.given_name}`;
+    
+    // Affichage des infos
+    document.getElementById('user-status').innerText = `NODE: ${userEmail.toUpperCase()}`;
+    document.getElementById('welcome-msg').innerText = `Système actif : ${user.given_name}`;
 
-    if (user.email === ADMIN_ID) {
+    // AFFICHAGE DU PANNEAU ADMIN
+    if (userEmail === ADMIN_ID.toLowerCase()) {
+        console.log("Accès Admin accordé");
         document.getElementById('admin-zone').style.display = 'block';
         updateLogView();
+    } else {
+        document.getElementById('admin-zone').style.display = 'none';
     }
-    renderServices(user.email);
+    
+    renderServices(userEmail);
 }
 
 function renderServices(userEmail) {
@@ -44,18 +65,18 @@ function renderServices(userEmail) {
         const card = document.createElement('div');
         card.className = 'service-card';
         
-        // --- LOGIQUE CAS PRONOTE RÉELLE ---
         let link = s.url;
+        // Si c'est Pronote, on injecte le ticket CAS généré par l'admin
         if (s.name.toLowerCase() === 'pronote') {
-            const ticket = data.cas_tokens[userEmail.toLowerCase()];
+            const ticket = data.cas_tokens[userEmail];
             if (ticket) {
-                // Construction du lien SSO pour bypasser la connexion
-                link = `${s.url}?ticket=${ticket}&auth_mode=cas&user_id=${btoa(userEmail)}`;
+                // Lien direct vers l'espace Pronote sans login
+                link = `${s.url}/cas?ticket=${ticket}&login=true`;
             }
         }
 
         card.innerHTML = `
-            ${userEmail === ADMIN_ID ? `<button class="btn-del" onclick="removeService(${idx})">×</button>` : ''}
+            ${userEmail === ADMIN_ID.toLowerCase() ? `<button class="btn-del" onclick="removeService(${idx})">×</button>` : ''}
             <a href="${link}" target="_blank" style="text-decoration:none; color:white;">
                 <span class="icon">${s.ico}</span>
                 <span style="font-weight:700; letter-spacing:1px; text-transform:uppercase; font-size:13px;">${s.name}</span>
@@ -65,7 +86,22 @@ function renderServices(userEmail) {
     });
 }
 
-// ADMIN: Créer un service (Visible par tous)
+// --- ACTIONS ADMINISTRATEUR ---
+
+function bindCAS() {
+    const target = document.getElementById('cas-mail').value.trim().toLowerCase();
+    if (!target.includes("@")) return alert("Entrez un email valide");
+
+    // Génération du ticket unique pour Pronote
+    const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+    data.cas_tokens[target] = ticket;
+    
+    sync();
+    document.getElementById('cas-log').innerText = `TICKET GÉNÉRÉ POUR ${target}`;
+    logEvent(ADMIN_ID, `BYPASS_CREATED_FOR: ${target}`);
+    alert("Le compte de l'élève est maintenant relié. Il n'aura plus besoin de mot de passe Pronote.");
+}
+
 function createNewService() {
     const ico = document.getElementById('add-ico').value || '🔗';
     const name = document.getElementById('add-name').value;
@@ -75,32 +111,19 @@ function createNewService() {
         data.services.push({ ico, name, url });
         sync();
         renderServices(ADMIN_ID);
-        logEvent(ADMIN_ID, `DEPLOY_SERVICE: ${name}`);
+        logEvent(ADMIN_ID, `SERVICE_ADDED: ${name}`);
     }
 }
 
-// ADMIN: Supprimer un service
 function removeService(index) {
-    if(confirm("Confirmer la suppression globale de ce service ?")) {
+    if(confirm("Supprimer ce service pour TOUT LE MONDE ?")) {
         data.services.splice(index, 1);
         sync();
         renderServices(ADMIN_ID);
     }
 }
 
-// ADMIN: Générer un ticket CAS pour un utilisateur précis
-function bindCAS() {
-    const target = document.getElementById('cas-mail').value.trim().toLowerCase();
-    if (!target.endsWith("@campus-rosaparks.fr")) return alert("Erreur: Mail hors domaine.");
-
-    // Ticket unique type CAS 2.0
-    const ticket = "ST-" + Date.now() + "-" + Math.random().toString(36).substring(2, 12).toUpperCase();
-    data.cas_tokens[target] = ticket;
-    
-    sync();
-    document.getElementById('cas-log').innerText = `SUCCESS: Ticket ${ticket} lié à ${target}`;
-    logEvent(ADMIN_ID, `CAS_TICKET_GEN_FOR: ${target}`);
-}
+// --- UTILITAIRES ---
 
 function signOut() {
     google.accounts.id.disableAutoSelect();
@@ -120,5 +143,7 @@ function logEvent(user, action) {
 
 function updateLogView() {
     const table = document.getElementById('log-display');
-    table.innerHTML = data.logs.slice(0, 8).map(l => `<tr><td>${l.user}</td><td>${l.action}</td><td>${l.time}</td></tr>`).join('');
+    if(table) {
+        table.innerHTML = data.logs.slice(0, 5).map(l => `<tr><td>${l.user}</td><td>${l.action}</td><td>${l.time}</td></tr>`).join('');
+    }
 }
