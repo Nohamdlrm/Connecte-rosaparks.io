@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ROSA PARKS | NEURAL CONNECT</title>
+    <title>ROSA PARKS | NEURAL CONNECT v3</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;700;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
@@ -12,21 +12,17 @@
             --admin-glow: #ff0055;
             --bg: #000000;
             --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
-
-        /* Effet de particules en fond */
-        #bg-canvas { position: fixed; top:0; left:0; z-index: -1; opacity: 0.5; }
 
         .app-wrapper {
             height: 100vh; display: flex; justify-content: center; align-items: center;
             background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
         }
 
-        /* Cadre Holographique */
         .holo-frame {
             width: 95%; max-width: 1200px; height: 85vh;
             background: var(--card-bg);
@@ -35,151 +31,113 @@
             border-radius: 40px;
             display: flex; flex-direction: column;
             position: relative; box-shadow: 0 0 80px rgba(0,0,0,1);
-            animation: frameEntry 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        @keyframes frameEntry {
-            from { opacity: 0; transform: scale(1.1) translateY(30px); filter: blur(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-        }
-
-        /* Header Cyber */
         .cyber-header {
-            padding: 30px 40px; border-bottom: 1px solid var(--border);
+            padding: 25px 40px; border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
         }
 
-        .logo-text { font-weight: 800; font-size: 1.2rem; letter-spacing: 4px; color: var(--glow); text-shadow: 0 0 15px var(--glow); }
+        .logo-text { font-weight: 800; font-size: 1rem; letter-spacing: 4px; color: var(--glow); text-shadow: 0 0 15px var(--glow); }
 
-        /* Views */
-        .view { display: none; padding: 50px; overflow-y: auto; height: 100%; }
-        .view.active { display: block; }
+        .view { display: none; padding: 40px; overflow-y: auto; height: 100%; }
+        .view.active { display: block; animation: fadeIn 0.5s ease; }
 
-        /* LOGIN DESIGN */
-        .auth-container { text-align: center; margin-top: 10vh; }
-        .auth-container h1 { font-size: 4rem; font-weight: 200; letter-spacing: -2px; margin-bottom: 20px; }
-        .auth-container span { color: var(--glow); font-weight: 800; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* DASHBOARD GRID */
-        .grid-system {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 25px; margin-top: 20px;
-        }
+        /* GRID SERVICES */
+        .grid-system { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 
         .cyber-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 24px; padding: 40px 20px;
-            text-align: center; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer; position: relative; overflow: hidden;
-            text-decoration: none; color: white;
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+            border-radius: 24px; padding: 30px 20px; text-align: center;
+            transition: 0.4s; cursor: pointer; text-decoration: none; color: white;
+            position: relative;
         }
 
-        .cyber-card:hover {
-            background: rgba(0, 242, 255, 0.05);
-            border-color: var(--glow);
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 242, 255, 0.1);
+        .cyber-card:hover { border-color: var(--glow); background: rgba(0, 242, 255, 0.05); transform: translateY(-5px); }
+
+        /* BOUTON SUPPRIMER (ADMIN) */
+        .del-btn {
+            position: absolute; top: 10px; right: 10px; background: rgba(255,0,85,0.2);
+            color: var(--admin-glow); border: none; border-radius: 8px; padding: 5px 8px;
+            cursor: pointer; font-size: 10px; display: none;
         }
+        .admin-mode .del-btn { display: block; }
 
-        .cyber-card .ico { font-size: 50px; display: block; margin-bottom: 20px; transition: 0.3s; }
-        .cyber-card:hover .ico { transform: scale(1.2); filter: drop-shadow(0 0 10px var(--glow)); }
-
-        /* ADMIN PANEL */
+        /* ADMIN STYLES */
         .admin-layer {
-            margin-top: 60px; padding: 40px; border-radius: 30px;
-            background: linear-gradient(145deg, rgba(255,0,85,0.05), transparent);
-            border: 1px solid rgba(255,0,85,0.2);
+            margin-top: 40px; padding: 30px; border-radius: 30px;
+            background: rgba(255,0,85,0.02); border: 1px solid rgba(255,0,85,0.1);
         }
 
-        .admin-layer h3 { color: var(--admin-glow); margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; }
-
-        .input-group { display: flex; gap: 15px; margin-bottom: 20px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
         input {
-            flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--border);
-            padding: 18px; border-radius: 15px; color: white; outline: none; transition: 0.3s;
+            flex: 1; background: #000; border: 1px solid var(--border);
+            padding: 15px; border-radius: 12px; color: white; outline: none;
         }
-        input:focus { border-color: var(--glow); box-shadow: 0 0 15px rgba(0,242,255,0.2); }
 
-        .btn-glow {
-            padding: 18px 35px; border-radius: 15px; border: none; font-weight: 700;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase;
-        }
-        .btn-primary { background: #fff; color: #000; }
-        .btn-admin { background: var(--admin-glow); color: #fff; }
+        .btn { padding: 15px 25px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-logout { background: transparent; color: #ff4b2b; border: 1px solid #ff4b2b22; }
+        .btn-logout:hover { background: #ff4b2b; color: white; }
+        .btn-admin { background: var(--admin-glow); color: white; }
 
-        /* Table Logs */
-        .log-list { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .log-list td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.8rem; color: #888; }
-        .log-list tr:hover td { color: #fff; background: rgba(255,255,255,0.02); }
-
+        .log-table { width: 100%; font-size: 11px; margin-top: 20px; border-collapse: collapse; }
+        .log-table td { padding: 10px; border-bottom: 1px solid var(--border); color: #666; }
     </style>
 </head>
 <body>
 
     <div class="app-wrapper">
         <div class="holo-frame">
-            
             <div class="cyber-header">
                 <div class="logo-text">ROSA PARKS // INFRA</div>
-                <div id="status-display" style="font-size: 10px; color: #444;">IDLE_MODE_WAITING_AUTH</div>
+                <div id="header-right"></div>
             </div>
 
             <div id="view-login" class="view active">
-                <div class="auth-container">
-                    <h1>Cloud<span>Connect</span></h1>
-                    <p style="opacity: 0.3; margin-bottom: 50px;">RESTRICTED TO @CAMPUS-ROSAPARKS.FR</p>
-                    
-                    <div style="display: flex; justify-content: center;">
-                        <div id="g_id_onload" 
-                             data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" 
-                             data-callback="handleAuth"></div>
+                <div style="text-align:center; margin-top:15vh;">
+                    <h1 style="font-size:3rem; margin-bottom:40px;">Neural<span style="color:var(--glow)">Connect</span></h1>
+                    <div style="display:flex; justify-content:center;">
+                        <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="handleAuth"></div>
                         <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill"></div>
                     </div>
                 </div>
             </div>
 
             <div id="view-dash" class="view">
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px;">
-                    <div>
-                        <h2 id="welcome-txt" style="font-size: 2.5rem; font-weight: 800;">Système Actif</h2>
-                        <p id="user-mail" style="color: var(--glow); opacity: 0.7;"></p>
-                    </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                    <h2 id="user-greeting">Système Prêt</h2>
+                    <button class="btn btn-logout" onclick="logout()">DÉCONNEXION</button>
                 </div>
 
                 <div class="grid-system" id="srv-grid"></div>
 
                 <div id="admin-panel" style="display:none;">
                     <div class="admin-layer">
-                        <h3><span style="border-left: 4px solid var(--admin-glow); padding-left: 15px;">Console Maître</span></h3>
+                        <h3 style="color:var(--admin-glow); margin-bottom:20px;">MAÎTRE // CONSOLE</h3>
                         
-                        <p style="font-size: 11px; margin-bottom: 10px; opacity: 0.5;">GÉNÉRER UN TICKET CAS (AUTO-LOGIN PRONOTE)</p>
                         <div class="input-group">
-                            <input type="text" id="cas-target" placeholder="Email de l'utilisateur">
-                            <button class="btn-glow btn-admin" onclick="createCAS()">VÉRIFIER & LIER</button>
-                        </div>
-                        <div id="cas-msg" style="margin-bottom: 30px; font-size: 12px;"></div>
-
-                        <p style="font-size: 11px; margin-bottom: 10px; opacity: 0.5;">PUBLIER UN NOUVEAU SERVICE GLOBAL</p>
-                        <div class="input-group">
-                            <input type="text" id="new-ico" placeholder="Emoji" style="max-width: 80px; text-align: center;">
+                            <input type="text" id="new-ico" placeholder="Emoji" style="max-width:80px">
                             <input type="text" id="new-name" placeholder="Nom">
                             <input type="text" id="new-url" placeholder="URL">
-                            <button class="btn-glow btn-primary" onclick="addGlobalService()">DÉPLOYER</button>
+                            <button class="btn btn-admin" onclick="addService()">DÉPLOYER</button>
                         </div>
 
-                        <h4 style="margin-top: 40px; font-size: 12px; opacity: 0.5;">FLUX DE CONNEXION TEMPS RÉEL</h4>
-                        <table class="log-list">
-                            <tbody id="log-table"></tbody>
+                        <div style="margin-top:30px">
+                            <p style="font-size:11px; opacity:0.5; margin-bottom:10px;">GÉRER LES ACCÈS CAS</p>
+                            <div class="input-group">
+                                <input type="text" id="cas-mail" placeholder="Utilisateur @campus-rosaparks.fr">
+                                <button class="btn btn-admin" onclick="createTicket()">LIER TICKET</button>
+                            </div>
+                        </div>
+
+                        <table class="log-table">
+                            <tbody id="log-list"></tbody>
                         </table>
                     </div>
                 </div>
-
-                <div style="margin-top: 100px; opacity: 0.1; font-size: 10px; text-align: center;">
-                    SECURE SHELL CONNECTION // NO_DECRYPT_AUTHORIZED
-                </div>
             </div>
-
         </div>
     </div>
 
