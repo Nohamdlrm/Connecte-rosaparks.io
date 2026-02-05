@@ -2,106 +2,98 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RP INFRA | Système Central</title>
+    <title>RP INFRA | NEURAL GATE</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        :root { --glow: #00ffcc; --admin: #ff0055; --bg: #000; --card: rgba(20, 20, 25, 0.8); --border: rgba(255,255,255,0.1); }
+        :root { --glow: #00ffcc; --admin: #ff0055; --bg: #000; --card: rgba(20, 20, 25, 0.9); --border: rgba(255,255,255,0.1); }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit', sans-serif; }
         body { background: var(--bg); color:#fff; height:100vh; overflow:hidden; }
         
-        /* Fond */
         .container { height:100vh; display:flex; flex-direction:column; background: radial-gradient(circle at center, #0d1117 0%, #000 100%); }
-        
         header { padding:20px 40px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:100; }
         .logo { font-weight:900; letter-spacing:2px; color:var(--glow); text-shadow:0 0 10px var(--glow); }
 
-        .view { display:none; padding:40px; overflow-y:auto; flex:1; animation: fadeIn 0.4s ease; }
-        .view.active { display:block; }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .view { display:none; padding:40px; overflow-y:auto; flex:1; }
+        .view.active { display:block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
         /* Login */
         .login-box { text-align:center; margin-top:15vh; }
         .login-box h1 { font-size:4rem; font-weight:900; margin-bottom:10px; }
-        .login-box p { color:#555; margin-bottom:40px; letter-spacing:3px; }
 
-        /* Services */
-        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:20px; }
-        .card { background:var(--card); border:1px solid var(--border); border-radius:24px; padding:40px 20px; text-align:center; position:relative; transition:0.3s; cursor:pointer; text-decoration:none; color:white; }
-        .card:hover { border-color:var(--glow); transform:translateY(-5px); box-shadow:0 10px 30px rgba(0,255,204,0.1); }
+        /* Services Grid */
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:20px; }
+        .card { background:var(--card); border:1px solid var(--border); border-radius:24px; padding:40px 20px; text-align:center; position:relative; transition:0.3s; text-decoration:none; color:white; }
+        .card:hover { border-color:var(--glow); transform:translateY(-5px); }
         .card .ico { font-size:50px; display:block; margin-bottom:15px; }
 
-        /* Admin */
-        .admin-zone { margin-top:50px; padding:40px; border-radius:30px; background:rgba(255,0,85,0.03); border:1px solid rgba(255,0,85,0.1); }
-        .admin-title { color:var(--admin); font-weight:900; font-size:12px; margin-bottom:20px; text-transform:uppercase; letter-spacing:2px; }
-        
-        .row { display:flex; gap:10px; margin-bottom:20px; }
+        /* PopUp Erreur */
+        #error-popup { 
+            display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+            background: #1a0a0e; border: 2px solid var(--admin); padding: 40px;
+            border-radius: 20px; z-index: 1000; text-align: center; box-shadow: 0 0 50px rgba(255,0,85,0.3);
+        }
+
+        /* Admin Zone */
+        .admin-zone { margin-top:50px; padding:30px; border-radius:30px; background:rgba(255,0,85,0.05); border:1px solid rgba(255,0,85,0.2); }
+        .row { display:flex; gap:10px; margin-bottom:15px; }
         input { flex:1; background:#000; border:1px solid var(--border); padding:15px; border-radius:12px; color:white; outline:none; }
-        input:focus { border-color:var(--glow); }
-
-        .btn { padding:15px 25px; border-radius:12px; border:none; font-weight:700; cursor:pointer; transition:0.2s; }
-        .btn-main { background:#fff; color:#000; }
+        .btn { padding:15px 25px; border-radius:12px; border:none; font-weight:700; cursor:pointer; }
         .btn-admin { background:var(--admin); color:#fff; }
-        .btn-logout { background:transparent; border:1px solid #333; color:#666; padding:8px 15px; font-size:11px; }
-        .btn-logout:hover { border-color:white; color:white; }
-
-        .del-btn { position:absolute; top:15px; right:15px; background:none; border:none; color:#444; font-size:20px; cursor:pointer; }
-        .del-btn:hover { color:var(--admin); }
-
-        table { width:100%; margin-top:20px; font-size:12px; border-collapse:collapse; color:#666; }
-        td { padding:10px; border-bottom:1px solid #111; }
+        .btn-main { background:#fff; color:#000; }
+        .del-btn { position:absolute; top:10px; right:10px; background:none; border:none; color:#444; font-size:20px; cursor:pointer; }
     </style>
 </head>
 <body>
+    <div id="error-popup">
+        <h2 style="color:var(--admin); margin-bottom:15px;">ACCÈS REFUSÉ</h2>
+        <p id="error-msg" style="margin-bottom:20px; opacity:0.8;"></p>
+        <button class="btn btn-main" onclick="closePopup()">COMPRIS</button>
+    </div>
+
     <div class="container">
         <header>
             <div class="logo">RP // CLOUD-INFRA</div>
-            <div id="status" style="font-size:11px; color:#444;">DÉCONNECTÉ</div>
+            <div id="status" style="font-size:11px; color:#444;">IDLE</div>
         </header>
 
         <div id="view-login" class="view active">
             <div class="login-box">
                 <h1>CORE<span>SYSTEM</span></h1>
-                <p>IDENTIFICATION REQUISE (@CAMPUS-ROSAPARKS.FR)</p>
+                <p style="color:#555; letter-spacing:3px; margin-bottom:30px;">AUTH REQUIRED (@CAMPUS-ROSAPARKS.FR)</p>
                 <div style="display:flex; justify-content:center;">
-                    <div id="g_id_onload" 
-                         data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" 
-                         data-callback="onGoogleAuth"></div>
+                    <div id="g_id_onload" data-client_id="229948163418-m3n25i32ej423k59qu0gs8irp9g4vklp.apps.googleusercontent.com" data-callback="onSignIn"></div>
                     <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-shape="pill"></div>
                 </div>
             </div>
         </div>
 
         <div id="view-dash" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
-                <h2 id="welcome" style="font-size:2rem; font-weight:900;">Accès autorisé</h2>
-                <button class="btn btn-logout" onclick="logout()">LOGOUT_SYSTEM</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:40px;">
+                <h2 id="welcome" style="font-size:2rem; font-weight:900;">Nodes_Online</h2>
+                <button class="btn btn-main" style="background:transparent; color:#666; border:1px solid #333;" onclick="location.reload()">DÉCONNEXION</button>
             </div>
 
             <div class="grid" id="srv-grid"></div>
 
             <div id="admin-panel" style="display:none;" class="admin-zone">
-                <div class="admin-title">Administration Maître</div>
+                <h3 style="color:var(--admin); margin-bottom:20px; font-size:12px;">ADMIN_CONSOLE_V3</h3>
                 
-                <div style="background:rgba(0,0,0,0.4); padding:25px; border-radius:20px; margin-bottom:25px;">
-                    <p style="font-size:11px; color:var(--admin); margin-bottom:10px;">GÉNÉRATEUR DE CONNEXION DIRECTE (CAS PRONOTE)</p>
+                <div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; margin-bottom:20px;">
+                    <p style="font-size:10px; color:var(--admin); margin-bottom:10px;">GÉNÉRATEUR DE TICKET CAS (BYPASS PRONOTE LOGIN)</p>
                     <div class="row">
-                        <input type="text" id="cas-mail" placeholder="Email de l'élève">
-                        <button class="btn btn-admin" onclick="generateCas()">LIER LE COMPTE</button>
+                        <input type="text" id="cas-mail" placeholder="Mail de l'élève">
+                        <button class="btn btn-admin" onclick="genTicket()">GÉNÉRER & LIER</button>
                     </div>
-                    <div id="cas-msg" style="font-size:11px; color:var(--glow);"></div>
                 </div>
 
-                <div class="admin-title">Déploiement de Services</div>
                 <div class="row">
-                    <input type="text" id="add-ico" placeholder="Emoji" style="max-width:80px;">
+                    <input type="text" id="add-ico" placeholder="Emoji" style="max-width:70px;">
                     <input type="text" id="add-name" placeholder="Titre">
-                    <input type="text" id="add-url" placeholder="Lien">
-                    <button class="btn btn-main" onclick="addService()">PUBLIER</button>
+                    <input type="text" id="add-url" placeholder="URL">
+                    <button class="btn btn-main" onclick="pushService()">DÉPLOYER</button>
                 </div>
-
-                <table id="log-list"></table>
             </div>
         </div>
     </div>
